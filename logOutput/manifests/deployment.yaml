@@ -33,4 +33,5 @@ spec:
           mountPath: /shared
       volumes:
       - name: shared-logs
-        emptyDir: {}
+        persistentVolumeClaim:
+          claimName: shared-pvc

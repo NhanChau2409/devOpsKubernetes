@@ -1,14 +1,27 @@
+import os
+import uuid
 from flask import Flask
+from datetime import datetime
 
 app = Flask(__name__)
-counter = 0
+LOG_FILE = "/shared/log.txt"
+
+
+def get_counter():
+    if not os.path.exists(LOG_FILE):
+        return 0
+    with open(LOG_FILE, "r") as f:
+        return sum(1 for _ in f)
 
 
 @app.route("/pingpong", methods=["GET"])
 def pingpong():
-    global counter
+    counter = get_counter()
+    timestamp = datetime.utcnow().isoformat() + "Z"
+    random_string = str(uuid.uuid4())
+    with open(LOG_FILE, "a") as f:
+        f.write(f"{timestamp}: {counter}: {random_string}\n")
     response = f"pong {counter}"
-    counter += 1
     return response, 200
 
 

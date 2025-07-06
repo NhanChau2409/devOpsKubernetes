@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, Response
 import os
 
 LOG_FILE = "/shared/log.txt"
@@ -10,10 +10,10 @@ app = Flask(__name__)
 def get_logs():
     if os.path.exists(LOG_FILE):
         with open(LOG_FILE, "r") as f:
-            lines = f.readlines()
-        return jsonify({"logs": lines})
+            content = f.read()
+        return Response(content, mimetype="text/plain")
     else:
-        return jsonify({"logs": []})
+        return Response("No logs yet.", mimetype="text/plain")
 
 
 if __name__ == "__main__":
