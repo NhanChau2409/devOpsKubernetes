@@ -38,17 +38,30 @@ def home():
                 with open(TIMESTAMP_PATH, "w") as tf:
                     tf.write(str(now))
                 served_old = False
-    # Serve the image in HTML
+    # Hardcoded todos
+    todos = ["Buy milk", "Read a book", "Walk the dog"]
+    # Serve the image and todo app in HTML
     html = """
     <html>
-    <head><title>Random Image</title></head>
+    <head><title>Random Image & Todo App</title></head>
     <body>
         <h1>Random Image (cached for 10 minutes)</h1>
         <img src="/image" style="max-width:100%;height:auto;" />
+        <hr/>
+        <h2>Todo App</h2>
+        <form onsubmit="return false;">
+            <input type="text" id="todo-input" maxlength="140" placeholder="Enter your todo (max 140 chars)" />
+            <button type="submit">Send</button>
+        </form>
+        <ul>
+            {% for todo in todos %}
+                <li>{{ todo }}</li>
+            {% endfor %}
+        </ul>
     </body>
     </html>
     """
-    return render_template_string(html)
+    return render_template_string(html, todos=todos)
 
 
 @app.route("/image")
