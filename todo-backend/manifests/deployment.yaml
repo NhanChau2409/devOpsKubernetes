@@ -1,34 +1,32 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: the-project
+  name: todo-backend
   labels:
-    app: the-project
+    app: todo-backend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: the-project
+      app: todo-backend
   template:
     metadata:
       labels:
-        app: the-project
+        app: todo-backend
     spec:
       containers:
-      - name: the-project
-        image: the-project:latest
+      - name: todo-backend
+        image: todo-backend:latest
         imagePullPolicy: Never
         ports:
         - containerPort: 8080
         env:
         - name: PORT
           value: "8080"
-        - name: TODO_BACKEND_URL
-          value: "http://todo-backend:8080"
         volumeMounts:
-        - name: image-cache
+        - name: todo-data
           mountPath: /data
       volumes:
-      - name: image-cache
+      - name: todo-data
         persistentVolumeClaim:
-          claimName: shared-pvc
+          claimName: shared-pvc 
