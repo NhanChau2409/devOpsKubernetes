@@ -19,19 +19,9 @@ spec:
         image: log-output:latest
         imagePullPolicy: Never
         args: ["python", "-u", "logOutput.py"]
-        volumeMounts:
-        - name: shared-logs
-          mountPath: /shared
       - name: log-reader
         image: log-output:latest
         imagePullPolicy: Never
         args: ["python", "-u", "reader.py"]
         ports:
         - containerPort: 8080
-        volumeMounts:
-        - name: shared-logs
-          mountPath: /shared
-      volumes:
-      - name: shared-logs
-        persistentVolumeClaim:
-          claimName: shared-pvc

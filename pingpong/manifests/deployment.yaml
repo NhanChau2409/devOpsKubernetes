@@ -20,10 +20,3 @@ spec:
         imagePullPolicy: Never
         ports:
         - containerPort: 8080
-        volumeMounts:
-        - name: shared-logs
-          mountPath: /shared
-      volumes:
-      - name: shared-logs
-        persistentVolumeClaim:
-          claimName: shared-pvc
