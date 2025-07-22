@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: the-project-config
+  namespace: project
+data:
+  # File paths
+  IMAGE_PATH: "/data/image.jpg"
+  TIMESTAMP_PATH: "/data/timestamp.txt"
+  
+  # Cache settings
+  CACHE_DURATION: "600"
+  
+  # External services
+  IMAGE_SERVICE_URL: "https://picsum.photos/1200"
+  
+  # Timeout settings
+  BACKEND_TIMEOUT: "5"
+  IMAGE_TIMEOUT: "10"
+  
+  # UI settings
+  MAX_TODO_LENGTH: "140"
+  
+  # Service URLs
+  TODO_BACKEND_URL: "http://todo-backend:8080" 

@@ -5,9 +5,14 @@ import requests
 
 app = Flask(__name__)
 
-IMAGE_PATH = "/data/image.jpg"
-TIMESTAMP_PATH = "/data/timestamp.txt"
-CACHE_DURATION = 600  # 10 minutes in seconds
+# Configuration from environment variables
+IMAGE_PATH = os.environ.get("IMAGE_PATH", "/data/image.jpg")
+TIMESTAMP_PATH = os.environ.get("TIMESTAMP_PATH", "/data/timestamp.txt")
+CACHE_DURATION = int(os.environ.get("CACHE_DURATION", "600"))  # 10 minutes in seconds
+IMAGE_SERVICE_URL = os.environ.get("IMAGE_SERVICE_URL", "https://picsum.photos/1200")
+BACKEND_TIMEOUT = int(os.environ.get("BACKEND_TIMEOUT", "5"))
+IMAGE_TIMEOUT = int(os.environ.get("IMAGE_TIMEOUT", "10"))
+MAX_TODO_LENGTH = int(os.environ.get("MAX_TODO_LENGTH", "140"))
 
 # Backend service configuration
 TODO_BACKEND_URL = os.environ.get("TODO_BACKEND_URL", "http://todo-backend:8080")
@@ -16,7 +21,7 @@ TODO_BACKEND_URL = os.environ.get("TODO_BACKEND_URL", "http://todo-backend:8080"
 def fetch_todos_from_backend():
     """Fetch todos from the backend service"""
     try:
-        response = requests.get(f"{TODO_BACKEND_URL}/todos", timeout=5)
+        response = requests.get(f"{TODO_BACKEND_URL}/todos", timeout=BACKEND_TIMEOUT)
         if response.status_code == 200:
             return response.json()
         else:
@@ -48,7 +53,7 @@ def home():
             served_old = True
         else:
             # Fetch new image
-            resp = requests.get("https://picsum.photos/1200", timeout=10)
+            resp = requests.get(IMAGE_SERVICE_URL, timeout=IMAGE_TIMEOUT)
             if resp.status_code == 200:
                 with open(IMAGE_PATH, "wb") as imgf:
                     imgf.write(resp.content)
@@ -82,7 +87,7 @@ def home():
         <hr/>
         <h2>Todo App</h2>
         <div class="todo-form">
-            <input type="text" id="todo-input" class="todo-input" maxlength="140" placeholder="Enter your todo (max 140 chars)" />
+            <input type="text" id="todo-input" class="todo-input" maxlength="{{ max_todo_length }}" placeholder="Enter your todo (max {{ max_todo_length }} chars)" />
             <button onclick="addTodo()" class="todo-button">Add Todo</button>
             <button onclick="testBackend()" style="margin-left: 10px; padding: 8px 16px; background: #28a745; color: white; border: none; cursor: pointer;">Test Backend</button>
         </div>
@@ -180,7 +185,7 @@ def home():
     </body>
     </html>
     """
-    return render_template_string(html, todos=todos)
+    return render_template_string(html, todos=todos, max_todo_length=MAX_TODO_LENGTH)
 
 
 @app.route("/api/todos", methods=["POST"])
@@ -198,7 +203,7 @@ def create_todo():
             f"{TODO_BACKEND_URL}/todos",
             json={"text": todo_text},
             headers={"Content-Type": "application/json"},
-            timeout=5,
+            timeout=BACKEND_TIMEOUT,
         )
 
         if response.status_code in [200, 201]:
@@ -240,7 +245,7 @@ def health():
 def test_backend():
     """Test connection to backend service"""
     try:
-        response = requests.get(f"{TODO_BACKEND_URL}/health", timeout=5)
+        response = requests.get(f"{TODO_BACKEND_URL}/health", timeout=BACKEND_TIMEOUT)
         if response.status_code == 200:
             return jsonify(
                 {
