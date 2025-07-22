@@ -20,9 +20,31 @@ spec:
         image: log-output:latest
         imagePullPolicy: Never
         args: ["python", "-u", "logOutput.py"]
+        env:
+        - name: MESSAGE
+          valueFrom:
+            configMapKeyRef:
+              name: log-output-config
+              key: MESSAGE
+        volumeMounts:
+        - name: config-volume
+          mountPath: /config
       - name: log-reader
         image: log-output:latest
         imagePullPolicy: Never
         args: ["python", "-u", "reader.py"]
+        env:
+        - name: MESSAGE
+          valueFrom:
+            configMapKeyRef:
+              name: log-output-config
+              key: MESSAGE
+        volumeMounts:
+        - name: config-volume
+          mountPath: /config
         ports:
         - containerPort: 8080
+      volumes:
+      - name: config-volume
+        configMap:
+          name: log-output-config

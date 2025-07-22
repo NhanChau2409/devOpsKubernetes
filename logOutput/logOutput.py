@@ -6,9 +6,35 @@ import os
 PINGPONG_SERVICE_URL = "http://pingpong-service:8080"
 
 
+def read_config_data():
+    """Read ConfigMap data from file and environment variable"""
+    file_content = ""
+    message = ""
+
+    # Read file content from mounted ConfigMap
+    try:
+        with open("/config/information.txt", "r") as f:
+            file_content = f.read().strip()
+    except FileNotFoundError:
+        file_content = "Config file not found"
+    except Exception as e:
+        file_content = f"Error reading config file: {e}"
+
+    # Read environment variable
+    message = os.getenv("MESSAGE", "MESSAGE not set")
+
+    return file_content, message
+
+
 def write_logs():
     """Write logs with ping count from pingpong service"""
     counter = 0
+
+    # Read ConfigMap data once at startup
+    file_content, message = read_config_data()
+    print(f"file content: {file_content}")
+    print(f"env variable: MESSAGE={message}")
+
     while True:
         try:
             # Get ping count from pingpong service

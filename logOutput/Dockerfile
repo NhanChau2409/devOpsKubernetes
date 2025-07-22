@@ -6,6 +6,7 @@ WORKDIR /app
 COPY logOutput.py ./
 COPY reader.py ./
 COPY requirements.txt ./
+COPY config/information.txt ./config/information.txt
 
 RUN pip install --no-cache-dir -r requirements.txt
 
