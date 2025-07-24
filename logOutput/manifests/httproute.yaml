@@ -20,11 +20,4 @@ spec:
         value: /logs
     backendRefs:
     - name: log-output-service
-      port: 8080
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /pingpong
-    backendRefs:
-    - name: pingpong-service
       port: 8080 

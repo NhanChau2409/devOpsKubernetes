@@ -80,19 +80,8 @@ def increment_counter():
 
 
 @app.route("/", methods=["GET"])
-def root():
-    """Root endpoint - required by Ingress for health checks"""
-    ping_counter = get_counter()
-    return {
-        "service": "pingpong",
-        "status": "healthy",
-        "current_pings": ping_counter,
-        "message": "Ping-pong service is running. Use /pingpong to increment counter.",
-    }, 200
-
-
-@app.route("/pingpong", methods=["GET"])
 def pingpong():
+    """Main ping-pong endpoint - now on root path"""
     increment_counter()
     ping_counter = get_counter()
     timestamp = datetime.utcnow().isoformat() + "Z"
@@ -100,6 +89,18 @@ def pingpong():
     response = f"pong {ping_counter}"
     print(f"{timestamp}: {ping_counter}: {random_string}")
     return response, 200
+
+
+@app.route("/health", methods=["GET"])
+def health():
+    """Health check endpoint"""
+    ping_counter = get_counter()
+    return {
+        "service": "pingpong",
+        "status": "healthy",
+        "current_pings": ping_counter,
+        "message": "Ping-pong service is running. Use / to increment counter.",
+    }, 200
 
 
 @app.route("/pings", methods=["GET"])
