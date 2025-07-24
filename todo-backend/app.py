@@ -1,43 +1,70 @@
 from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
 import os
-import json
 from datetime import datetime
+import time
 
 app = Flask(__name__)
 
-# Data storage file
-TODOS_FILE = "/data/todos.json"
+# Database configuration from environment variables
+DB_HOST = os.environ.get("DB_HOST", "postgres-service")
+DB_PORT = os.environ.get("DB_PORT", "5432")
+DB_NAME = os.environ.get("DB_NAME", "todos_db")
+DB_USER = os.environ.get("DB_USER", "todos_user")
+DB_PASSWORD = os.environ.get("DB_PASSWORD", "todos_password_123")
+
+# Configure SQLAlchemy
+app.config["SQLALCHEMY_DATABASE_URI"] = (
+    f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+)
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+db = SQLAlchemy(app)
 
 
-def load_todos():
-    """Load todos from JSON file"""
+# Todo Model
+class Todo(db.Model):
+    __tablename__ = "todos"
+
+    id = db.Column(db.Integer, primary_key=True)
+    text = db.Column(db.Text, nullable=False)
+    completed = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(
+        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "text": self.text,
+            "completed": self.completed,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
+def init_db():
+    """Simple database initialization function"""
     try:
-        if os.path.exists(TODOS_FILE):
-            with open(TODOS_FILE, "r") as f:
-                return json.load(f)
-        return []
+        with app.app_context():
+            db.create_all()
+            print("✅ Database initialized successfully")
+            return True
     except Exception as e:
-        print(f"Error loading todos: {e}")
-        return []
-
-
-def save_todos(todos):
-    """Save todos to JSON file"""
-    try:
-        os.makedirs(os.path.dirname(TODOS_FILE), exist_ok=True)
-        with open(TODOS_FILE, "w") as f:
-            json.dump(todos, f, indent=2)
-        return True
-    except Exception as e:
-        print(f"Error saving todos: {e}")
+        print(f"❌ Database initialization failed: {e}")
         return False
 
 
 @app.route("/todos", methods=["GET"])
 def get_todos():
     """Get all todos"""
-    todos = load_todos()
-    return jsonify(todos)
+    try:
+        todos = Todo.query.order_by(Todo.created_at.desc()).all()
+        return jsonify([todo.to_dict() for todo in todos])
+    except Exception as e:
+        print(f"Error fetching todos: {e}")
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
 
 
 @app.route("/todos", methods=["POST"])
@@ -53,102 +80,78 @@ def create_todo():
         if not todo_text:
             return jsonify({"error": "Todo text cannot be empty"}), 400
 
-        # Load existing todos
-        todos = load_todos()
-
         # Create new todo
-        new_todo = {
-            "id": len(todos) + 1,
-            "text": todo_text,
-            "completed": False,
-            "created_at": datetime.now().isoformat(),
-        }
+        new_todo = Todo(text=todo_text, completed=False)
+        db.session.add(new_todo)
+        db.session.commit()
 
-        # Add to list
-        todos.append(new_todo)
-
-        # Save to file
-        if save_todos(todos):
-            return jsonify(new_todo), 201
-        else:
-            return jsonify({"error": "Failed to save todo"}), 500
+        return jsonify(new_todo.to_dict()), 201
 
     except Exception as e:
-        return jsonify({"error": f"Server error: {str(e)}"}), 500
+        db.session.rollback()
+        print(f"Error creating todo: {e}")
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
 
 
 @app.route("/todos/<int:todo_id>", methods=["PUT"])
 def update_todo(todo_id):
     """Update a todo (mark as completed)"""
     try:
-        todos = load_todos()
-
-        # Find the todo
-        todo = next((t for t in todos if t["id"] == todo_id), None)
+        todo = Todo.query.get(todo_id)
         if not todo:
             return jsonify({"error": "Todo not found"}), 404
 
         data = request.get_json()
         if "completed" in data:
-            todo["completed"] = data["completed"]
+            todo.completed = data["completed"]
+        if "text" in data:
+            todo.text = data["text"].strip()
 
-        if save_todos(todos):
-            return jsonify(todo)
-        else:
-            return jsonify({"error": "Failed to update todo"}), 500
+        db.session.commit()
+        return jsonify(todo.to_dict())
 
     except Exception as e:
-        return jsonify({"error": f"Server error: {str(e)}"}), 500
+        db.session.rollback()
+        print(f"Error updating todo: {e}")
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
 
 
 @app.route("/todos/<int:todo_id>", methods=["DELETE"])
 def delete_todo(todo_id):
     """Delete a todo"""
     try:
-        todos = load_todos()
-
-        # Find and remove the todo
-        todo = next((t for t in todos if t["id"] == todo_id), None)
+        todo = Todo.query.get(todo_id)
         if not todo:
             return jsonify({"error": "Todo not found"}), 404
 
-        todos = [t for t in todos if t["id"] != todo_id]
+        db.session.delete(todo)
+        db.session.commit()
 
-        if save_todos(todos):
-            return jsonify({"message": "Todo deleted successfully"})
-        else:
-            return jsonify({"error": "Failed to delete todo"}), 500
+        return jsonify({"message": "Todo deleted successfully"})
 
     except Exception as e:
-        return jsonify({"error": f"Server error: {str(e)}"}), 500
+        db.session.rollback()
+        print(f"Error deleting todo: {e}")
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
 
 
 @app.route("/health")
 def health():
-    """Health check endpoint"""
-    return jsonify({"status": "healthy", "service": "todo-backend"})
+    """Simple health check"""
+    return jsonify({"status": "ok"})
 
 
 @app.route("/")
 def root():
-    """Root endpoint with API information"""
-    return jsonify(
-        {
-            "service": "Todo Backend API",
-            "version": "1.0.0",
-            "endpoints": {
-                "GET /todos": "Get all todos",
-                "POST /todos": "Create a new todo",
-                "PUT /todos/<id>": "Update a todo",
-                "DELETE /todos/<id>": "Delete a todo",
-                "GET /health": "Health check",
-            },
-        }
-    )
+    """Root endpoint"""
+    return jsonify({"service": "Todo Backend API", "version": "2.0.0"})
 
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     print(f"Todo Backend started on port {port}")
-    print(f"Todos will be stored in: {TODOS_FILE}")
+
+    # Simple database initialization
+    init_db()
+
     app.run(host="0.0.0.0", port=port, debug=False)
