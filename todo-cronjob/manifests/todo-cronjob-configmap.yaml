@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: todo-cronjob-config
+  namespace: project
+data:
+  TODO_API_URL: "http://todo-backend:8080" 
