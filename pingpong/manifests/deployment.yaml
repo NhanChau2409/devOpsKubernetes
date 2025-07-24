@@ -17,8 +17,7 @@ spec:
     spec:
       containers:
       - name: pingpong
-        image: pingpong:latest
-        imagePullPolicy: Never
+        image: gcr.io/influential-rex-464619-p8/pingpong
         ports:
         - containerPort: 8080
         env:

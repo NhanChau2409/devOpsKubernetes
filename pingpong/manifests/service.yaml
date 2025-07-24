@@ -4,10 +4,10 @@ metadata:
   name: pingpong-service
   namespace: exercises
 spec:
+  type: LoadBalancer
   selector:
     app: pingpong
   ports:
     - protocol: TCP
       port: 8080
       targetPort: 8080
-  type: ClusterIP 

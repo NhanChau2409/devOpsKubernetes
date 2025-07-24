@@ -35,7 +35,6 @@ spec:
       name: postgres-storage
     spec:
       accessModes: ["ReadWriteOnce"]
-      storageClassName: postgres-storage
       resources:
         requests:
           storage: 5Mi
