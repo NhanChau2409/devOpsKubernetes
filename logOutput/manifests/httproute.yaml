@@ -1,0 +1,30 @@
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: HTTPRoute
+metadata:
+  name: log-output-route
+  namespace: exercises
+spec:
+  parentRefs:
+  - name: app-gateway
+    namespace: exercises
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    - path:
+        type: PathPrefix
+        value: /logoutput
+    - path:
+        type: PathPrefix
+        value: /logs
+    backendRefs:
+    - name: log-output-service
+      port: 8080
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /pingpong
+    backendRefs:
+    - name: pingpong-service
+      port: 8080 
