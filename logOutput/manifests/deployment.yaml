@@ -16,34 +16,19 @@ spec:
         app: log-output
     spec:
       containers:
-      - name: log-writer
-        image: log-output:latest
-        imagePullPolicy: Never
-        args: ["python", "-u", "logOutput.py"]
-        env:
-        - name: MESSAGE
-          valueFrom:
-            configMapKeyRef:
-              name: log-output-config
-              key: MESSAGE
-        volumeMounts:
-        - name: config-volume
-          mountPath: /config
-      - name: log-reader
-        image: log-output:latest
-        imagePullPolicy: Never
-        args: ["python", "-u", "reader.py"]
-        env:
-        - name: MESSAGE
-          valueFrom:
-            configMapKeyRef:
-              name: log-output-config
-              key: MESSAGE
-        volumeMounts:
-        - name: config-volume
-          mountPath: /config
+      - name: log-output
+        image: gcr.io/influential-rex-464619-p8/log-output
         ports:
         - containerPort: 8080
+        env:
+        - name: MESSAGE
+          valueFrom:
+            configMapKeyRef:
+              name: log-output-config
+              key: MESSAGE
+        volumeMounts:
+        - name: config-volume
+          mountPath: /config
       volumes:
       - name: config-volume
         configMap:

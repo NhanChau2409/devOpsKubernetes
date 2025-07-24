@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: log-output-ingress
+  name: pingpong-ingress
   namespace: exercises
 spec:
   rules:
@@ -11,24 +11,17 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: log-output-service
-            port:
-              number: 8080
-      - path: /logoutput
-        pathType: Prefix
-        backend:
-          service:
-            name: log-output-service
-            port:
-              number: 8080
-      - path: /logs
-        pathType: Prefix
-        backend:
-          service:
-            name: log-output-service
+            name: pingpong-service
             port:
               number: 8080
       - path: /pingpong
+        pathType: Prefix
+        backend:
+          service:
+            name: pingpong-service
+            port:
+              number: 8080
+      - path: /pings
         pathType: Prefix
         backend:
           service:
