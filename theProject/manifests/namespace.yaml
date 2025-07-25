@@ -4,3 +4,5 @@ metadata:
   name: project
   labels:
     name: project
+    environment: production
+    branch: main

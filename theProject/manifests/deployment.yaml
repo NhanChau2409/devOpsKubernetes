@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: the-project
-  namespace: project
   labels:
     app: the-project
 spec:

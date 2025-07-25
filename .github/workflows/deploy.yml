@@ -2,7 +2,7 @@ name: Deploy theProject
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, main, develop, feature/*, hotfix/* ]
     paths:
       - 'theProject/**'
 
@@ -60,10 +60,28 @@ jobs:
       - name: 'Set up Kustomize'
         uses: imranismail/setup-kustomize@v2.1.0
 
+      - name: 'Determine namespace'
+        run: |
+          if [[ "$BRANCH" == "master" || "$BRANCH" == "main" ]]; then
+            echo "NAMESPACE=project" >> $GITHUB_ENV
+            echo "SERVICE_NAME=the-project" >> $GITHUB_ENV
+          else
+            # Convert branch name to valid namespace name (lowercase, replace / with -)
+            NAMESPACE=$(echo "$BRANCH" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | sed 's/-\+/-/g' | sed 's/^-\|-$//g')
+            echo "NAMESPACE=$NAMESPACE" >> $GITHUB_ENV
+            echo "SERVICE_NAME=the-project-$NAMESPACE" >> $GITHUB_ENV
+          fi
+
+      - name: 'Create namespace if not exists'
+        run: |
+          kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+
       - name: 'Deploy'
         run: |-
           cd theProject
           kustomize edit set image PROJECT/IMAGE=$IMAGE_TAG
+          kustomize edit set namespace $NAMESPACE
+          kustomize edit set nameprefix $SERVICE_NAME-
           kustomize build . | kubectl apply -f -
-          kubectl rollout status deployment $SERVICE
-          kubectl get services -o wide
+          kubectl rollout status deployment $SERVICE_NAME-the-project -n $NAMESPACE
+          kubectl get services -n $NAMESPACE -o wide
