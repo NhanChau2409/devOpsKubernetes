@@ -10,8 +10,8 @@ env:
   PROJECT_ID: ${{ secrets.GKE_PROJECT }}
   GKE_CLUSTER: dwk-cluster
   GKE_ZONE: europe-north1-b
-  REGISTRY: europe-north1-docker.pkg.dev
-  REPOSITORY: the-project
+  REGISTRY: gcr.io
+  REPOSITORY: influential-rex-464619-p8
   IMAGE: the-project
   SERVICE: the-project
   BRANCH: ${{ github.ref_name }}
