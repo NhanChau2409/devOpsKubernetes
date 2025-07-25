@@ -44,7 +44,7 @@ jobs:
           location: '${{ env.GKE_ZONE }}'
 
       - name: 'Set up Docker Buildx'
-        run: gcloud auth configure-docker "$REGISTRY"
+        run: gcloud auth configure-docker
   
       - name: 'Form the image name'
         run: echo "IMAGE_TAG=$REGISTRY/$PROJECT_ID/$REPOSITORY/$IMAGE:$BRANCH-$GITHUB_SHA" >> $GITHUB_ENV
@@ -62,6 +62,7 @@ jobs:
 
       - name: 'Deploy'
         run: |-
+          cd theProject
           kustomize edit set image PROJECT/IMAGE=$IMAGE_TAG
           kustomize build . | kubectl apply -f -
           kubectl rollout status deployment $SERVICE
