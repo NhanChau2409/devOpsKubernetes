@@ -18,4 +18,9 @@ commonLabels:
   app: the-project
   version: v1
 
-namespace: project 
+namespace: project
+
+images:
+  - name: PROJECT/IMAGE
+    newName: gcr.io/influential-rex-464619-p8/the-project
+    newTag: latest 
