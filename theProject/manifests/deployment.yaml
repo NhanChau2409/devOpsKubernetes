@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
       - name: the-project
-        image: the-project:latest
-        imagePullPolicy: Never
+        image: gcr.io/influential-rex-464619-p8/the-project:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
         env:
@@ -64,10 +64,3 @@ spec:
             configMapKeyRef:
               name: the-project-config
               key: TODO_BACKEND_URL
-        volumeMounts:
-        - name: image-cache
-          mountPath: /data
-      volumes:
-      - name: image-cache
-        persistentVolumeClaim:
-          claimName: shared-pvc
